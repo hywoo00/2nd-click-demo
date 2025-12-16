@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useContextMenuStore, MenuItem } from '@/store/contextMenuStore';
 import ContextMenu from '@/components/ContextMenu';
+import Drawer from '@/components/Drawer';
 
 interface ListItem {
   id: string;
@@ -13,6 +15,7 @@ interface ListItem {
 export default function Home() {
   const openMenu = useContextMenuStore((state) => state.openMenu);
   const selectedItemId = useContextMenuStore((state) => state.selectedItemId);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // 샘플 리스트 데이터
   const listItems: ListItem[] = [
@@ -110,10 +113,19 @@ export default function Home() {
           리스트 항목에서 우클릭하여 Context Menu를 확인하세요
         </p>
 
+        <div className="mb-6 flex justify-center">
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg"
+          >
+            Drawer 열기 (Portal 테스트)
+          </button>
+        </div>
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
-              리스트 항목
+              리스트 항목 (일반 영역)
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               각 항목을 우클릭하면 해당 항목의 ID를 활용한 메뉴가 나타납니다.
@@ -157,6 +169,65 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Drawer with Portal */}
+      <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} title="Drawer 내부 (Portal)">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            이 Drawer는 Portal을 사용하여 렌더링됩니다. 아래 리스트 항목들을 우클릭하여
+            Context Menu가 Portal 환경에서도 정상 작동하는지 확인하세요.
+          </p>
+
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+              Drawer 내부 리스트
+            </h3>
+
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {listItems.map((item) => (
+                <div
+                  key={`drawer-${item.id}`}
+                  onContextMenu={(e) => handleContextMenu(e, item.id)}
+                  className="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-context-menu group"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className="text-base font-semibold text-gray-800 dark:text-white">
+                          {item.title}
+                        </h4>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}
+                        >
+                          {getStatusLabel(item.status)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        {item.description}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                        ID: <span className="font-mono">{item.id}</span> (Portal 내부)
+                      </p>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        우클릭 →
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>테스트 포인트:</strong> Drawer는 Portal을 사용하여 body에 렌더링됩니다.
+              Context Menu도 Portal을 사용하므로, z-index와 이벤트 처리가 올바르게 작동하는지 확인하세요.
+            </p>
+          </div>
+        </div>
+      </Drawer>
 
       <ContextMenu />
     </main>

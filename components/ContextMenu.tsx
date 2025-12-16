@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useContextMenuStore } from '@/store/contextMenuStore';
 
 export default function ContextMenu() {
-  const { isOpen, position, items, closeMenu, selectedItemId } = useContextMenuStore();
+  const { isOpen, position, items, closeMenu } = useContextMenuStore();
   const menuRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,12 +60,12 @@ export default function ContextMenu() {
     }
   }, [isOpen, position]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  const menuContent = (
     <div
       ref={menuRef}
-      className="fixed z-50 min-w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1"
+      className="fixed z-[9999] min-w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1"
       style={{
         left: position.x,
         top: position.y,
@@ -91,5 +97,8 @@ export default function ContextMenu() {
       })}
     </div>
   );
+
+  // Portal을 사용하여 body에 렌더링
+  return createPortal(menuContent, document.body);
 }
 
